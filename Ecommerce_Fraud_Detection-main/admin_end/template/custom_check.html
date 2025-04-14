@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Custom Check{% endblock %}
+
+{% block content %}
+        <h1 class="mt-5">Fraud Detection</h1>
+        <form id="fraud-form" class="mt-4">
+            <div class="form-group">
+                <label for="purchase_value">Purchase Value:</label>
+                <input type="number" class="form-control" name="purchase_value" id="purchase_value" required>
+            </div>
+            <div class="form-group">
+                <label for="age">Age:</label>
+                <input type="number" class="form-control" name="age" id="age" required>
+            </div>
+            <div class="form-group">
+                <label for="country">Country:</label>
+                <input type="text" class="form-control" name="country" id="country" required>
+            </div>
+            <div class="form-group">
+                <label for="time_spent">Time Spent:</label>
+                <input type="number" class="form-control" name="time_spent" id="time_spent" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Detect Fraud</button>
+        </form>
+
+        <div id="result" class="mt-4"></div>
+    </div>
+    {% endblock %}
+    {% block scripts %}
+    <!-- Link to Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- JavaScript code -->
+    <script>
+        document.getElementById('fraud-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = `
+                    <p>Prediction: ${data.prediction}</p>
+                    <p>Fraud Probability: ${data.fraud_probability}</p>
+                `;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+        </script>
+{% endblock %}
+

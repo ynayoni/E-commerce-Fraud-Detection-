@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Cart{% endblock %}
+{% block content %}
+
+<div class="container mt-5">
+    <h1 class="text-center">Your Cart</h1>
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Product Name</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col" style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.product_name }}</td>
+                        <td>
+                            <span class="quantity">{{ item.quantity }}</span><br>
+                            <small>{{ item.quantity }} product(s) - ${{ item.total_price }}</small> <!-- Display total price -->
+                        </td>
+                        <td style="text-align: right;">
+                            <button class="btn btn-secondary decrement-btn" data-product-name="{{ item.product_name }}">-</button>
+                            <button class="btn btn-primary increment-btn" data-product-name="{{ item.product_name }}">+</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr> <!-- Add a row to display total sum -->
+                        <td colspan="2" style="text-align: right;"><strong>Total:</strong></td>
+                        <td style="text-align: right;"><strong>${{ total_sum }}</strong></td>
+                    </tr>                 
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <a href="/marketplace" class="btn btn-primary">Continue Shopping</a>
+            <form id="purchase-form" style="margin-top: 25px;">
+                <button type="submit" class="btn btn-success">Purchase</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const decrementButtons = document.querySelectorAll('.decrement-btn');
+        const incrementButtons = document.querySelectorAll('.increment-btn');
+        
+        decrementButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const productName = button.getAttribute('data-product-name');
+                decrementQuantity(productName);
+            });
+        });
+
+        incrementButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const productName = button.getAttribute('data-product-name');
+                incrementQuantity(productName);
+            });
+        });
+
+        function decrementQuantity(productName) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/decrement_quantity', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // Reload the page after decrementing the quantity
+                        window.location.reload();
+                    } else {
+                        console.error('Failed to decrement product quantity');
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({productName: productName}));
+        }
+
+        function incrementQuantity(productName) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/increment_quantity', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // Reload the page after incrementing the quantity
+                        window.location.reload();
+                    } else {
+                        console.error('Failed to increment product quantity');
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({productName: productName}));
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const purchaseForm = document.getElementById('purchase-form');
+
+        purchaseForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const email = prompt('Enter your email:');
+            const password = prompt('Enter your password:');
+
+            if (email && password) {
+                purchase(email, password);
+            }
+        });
+
+        function purchase(email, password) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/purchase', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        alert('Purchase successful');
+                        // Reload the page or redirect to a confirmation page
+                        window.location.reload();
+                    } else {
+                        alert('Purchase failed: ' + xhr.responseText);
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({email: email, password: password}));
+        }
+    });
+</script>
+
+{% endblock %}

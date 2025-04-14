@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h1>Welcome to Fraud Detection System</h1>
+    
+    <div class="d-flex justify-content-center">
+        <div class="card m-3" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">Fraud Detection</h5>
+                <p class="card-text">Detect fraudulent activities in user transactions.</p>
+                <a href="/fraud_detection" class="btn btn-primary">Go to Fraud Detection</a>
+            </div>
+        </div>
+
+        <div class="card m-3" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">Custom Check</h5>
+                <p class="card-text">Perform custom checks on user data.</p>
+                <a href="/custom_check" class="btn btn-success">Go to Custom Check</a>
+            </div>
+        </div>
+
+        <div class="card m-3" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">Analytics</h5>
+                <p class="card-text">View analytics and insights from user data.</p>
+                <a href="/analytics" class="btn btn-info">Go to Analytics</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

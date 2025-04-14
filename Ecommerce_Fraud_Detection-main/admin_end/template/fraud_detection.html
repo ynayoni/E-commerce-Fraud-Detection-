@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Fraud Detection{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mt-5">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0">Fraud Detection</h2>
+                </div>
+                <div class="card-body">
+                    <form id="user-form">
+                        <div class="form-group">
+                            <label for="user_id">User ID:</label>
+                            <input type="text" class="form-control" name="user_id" id="user_id" required>
+                        </div>
+                        <button type="submit" class="btn btn-custom btn-block">Fetch User Data</button>
+                    </form>
+                    <div id="user-result" class="mt-4 text-center result-box"></div> <!-- Centered user results -->
+                    <form id="ban-form" class="mt-5">
+                        <div class="form-group">
+                            <label for="user_id_to_ban">User ID to Ban:</label>
+                            <input type="text" class="form-control" name="user_id_to_ban" id="user_id_to_ban" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-block">Ban Account</button>
+                    </form>
+                    <div id="result" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- JavaScript code -->
+
+<script>
+    document.getElementById('user-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var userId = document.getElementById('user_id').value;
+        fetch('/user/' + encodeURIComponent(userId))
+        .then(response => response.json())
+        .then(data => {
+            console.log('Data received from server:', data);
+            if (!data || !data.data || !Array.isArray(data.data)) {
+                document.getElementById('user-result').innerHTML = `<p>No valid data found for user ${userId}</p>`;
+                document.getElementById('user-result').style.backgroundColor = ''; // Reset background color
+            } else {
+                var userData = data.data; // Accessing the 'data' array
+                var userHtml = `<h3>User Data for ID ${data.user_id}</h3><ul class="list-unstyled">`; // Remove bullet points
+                // Display prediction and probability once for each user
+                userHtml += `<li>Prediction: ${userData[0].fraud_prediction}</li>`; // Accessing 'fraud_prediction' property of the first entry
+                userHtml += `<li>Fraud Probability: ${userData[0].fraud_probability}</li>`; // Accessing 'fraud_probability' property of the first entry
+                // Add more fields as needed
+                userHtml += `</ul>`;
+                document.getElementById('user-result').innerHTML = userHtml;
+
+                // Change background color based on prediction
+                if (userData[0].fraud_prediction === 'Fraudulent') {
+                    document.getElementById('user-result').style.backgroundColor = 'red';
+                } else {
+                    document.getElementById('user-result').style.backgroundColor = 'green';
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    document.getElementById('ban-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var userIdToBan = document.getElementById('user_id_to_ban').value;
+        banAccount(userIdToBan);
+    });
+
+    function banAccount(userId) {
+        fetch('/ban/' + encodeURIComponent(userId), {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if ('success' in data) {
+                alert('Account banned successfully!');
+            } else if ('error' in data) {
+                alert(data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
+
+{% endblock %}

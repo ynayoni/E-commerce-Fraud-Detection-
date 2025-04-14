@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>New Registrations</h1>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between mb-3">
+                <h2>New User Registrations</h2>
+                <button type="button" class="btn btn-outline-secondary" onclick="refreshPage()">Refresh</button>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">User ID</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Country</th>
+                        <th scope="col">Purchase Value</th>
+                        <th scope="col">Class</th>
+                    </tr>
+                </thead>
+                <tbody id="new-user-table-body">
+                    <!-- New user data will be displayed here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <h1>User Data Visualisation</h1>
+    <div class="bg-white p-4 mt-4">
+        <canvas id="class-chart" width="400" height="200"></canvas>
+    </div>
+    <div class="container mt-5">
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h2>Age Group Likeliness</h2>
+                <div class="bg-white p-4">
+                    <canvas id="age-chart" width="200" height="200"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h2>Purchase Value Likeliness</h2>
+                <div class="bg-white p-4">
+                    <canvas id="purchase-value-chart" width="200" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Function to fetch new user data from the server
+    function fetchNewUserData() {
+        fetch('/new_user_data')
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Debugging
+                const newUserTableBody = document.getElementById('new-user-table-body');
+                newUserTableBody.innerHTML = '';
+
+                // Loop through the new user data and append rows to the table
+                data.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.user_id}</td>
+                        <td>${user.email}</td>
+                        <td>${user.country}</td>
+                        <td>${user.purchase_value}</td>
+                        <td>${user.class === 1 ? 'Fraudulent' : 'Legitimate'}</td>
+                    `;
+                    newUserTableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching new user data:', error);
+            });
+    }
+
+    // Fetch new user data when the page loads
+    fetchNewUserData();
+
+    // Function to refresh the page
+    function refreshPage() {
+        location.reload();
+    }
+    function fetchClassData() {
+        fetch('/class_data')  // Endpoint to fetch class data from the server
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Debugging
+                
+                // Extract data for chart
+                const classCounts = {
+                    Fraudulent: data.filter(entry => entry.class === 1).length,
+                    Legitimate: data.filter(entry => entry.class === 0).length
+                };
+
+                // Create chart
+                const ctx = document.getElementById('class-chart').getContext('2d');
+                const classChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Fraudulent', 'Legitimate'],
+                        datasets: [{
+                            label: 'Class Distribution',
+                            data: [classCounts.Fraudulent, classCounts.Legitimate],
+                            backgroundColor: ['#FF5733', '#33FF9E']
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching class data:', error);
+            });
+    }
+
+    // Fetch class data and create chart when the page loads
+    fetchClassData();
+    function fetchAgeDistributionData() {
+        fetch('/age_distribution')
+            .then(response => response.json())
+            .then(data => {
+                const ageLabels = data.map(entry => entry.age);
+                const ageCounts = data.map(entry => entry.count);
+
+                const ctx = document.getElementById('age-chart').getContext('2d');
+                const ageChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ageLabels,
+                        datasets: [{
+                            data: ageCounts,
+                            backgroundColor: ['#FF5733', '#33FF9E', '#3389FF', '#FF3333', '#33FFC1']
+                        }]
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching age distribution data:', error);
+            });
+    }
+
+    function fetchPurchaseValueDistributionData() {
+        fetch('/purchase_value_distribution')
+            .then(response => response.json())
+            .then(data => {
+                const purchaseValueLabels = data.map(entry => entry.purchase_value);
+                const purchaseValueCounts = data.map(entry => entry.count);
+
+                const ctx = document.getElementById('purchase-value-chart').getContext('2d');
+                const purchaseValueChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: purchaseValueLabels,
+                        datasets: [{
+                            data: purchaseValueCounts,
+                            backgroundColor: ['#FF5733', '#33FF9E', '#3389FF', '#FF3333', '#33FFC1']
+                        }]
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching purchase value distribution data:', error);
+            });
+    }
+
+    fetchAgeDistributionData();
+    fetchPurchaseValueDistributionData();
+</script>
+
+{% endblock %}

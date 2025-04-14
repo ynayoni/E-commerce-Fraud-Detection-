@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Detection</title>
+    <!-- Link to Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Fraud Detection</h1>
+        <form id="fraud-form" class="mt-4">
+            <div class="form-group">
+                <label for="purchase_value">Purchase Value:</label>
+                <input type="number" class="form-control" name="purchase_value" id="purchase_value" required>
+            </div>
+            <div class="form-group">
+                <label for="age">Age:</label>
+                <input type="number" class="form-control" name="age" id="age" required>
+            </div>
+            <div class="form-group">
+                <label for="country">Country:</label>
+                <input type="text" class="form-control" name="country" id="country" required>
+            </div>
+            <div class="form-group">
+                <label for="time_spent">Time Spent:</label>
+                <input type="number" class="form-control" name="time_spent" id="time_spent" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Detect Fraud</button>
+        </form>
+
+        <div id="result" class="mt-4"></div>
+
+        <h2 class="mt-5">Retrieve User Data by User ID</h2>
+        <form id="user-form" class="mt-4">
+            <div class="form-group">
+                <label for="user_id">User ID:</label>
+                <input type="text" class="form-control" name="user_id" id="user_id" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Fetch User Data</button>
+        </form>
+
+        <div id="user-result" class="mt-4"></div>
+
+        <form id="ban-form" class="mt-5">
+            <div class="form-group">
+                <label for="user_id_to_ban">User ID to Ban:</label>
+                <input type="text" class="form-control" name="user_id_to_ban" id="user_id_to_ban" required>
+            </div>
+            <button type="submit" class="btn btn-danger">Ban Account</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('fraud-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = `
+                    <p>Prediction: ${data.prediction}</p>
+                    <p>Fraud Probability: ${data.fraud_probability}</p>
+                `;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    
+
+        document.getElementById('user-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var userId = document.getElementById('user_id').value;
+    fetch('/user/' + encodeURIComponent(userId))
+    .then(response => response.json())
+    .then(data => {
+        console.log('Data received from server:', data);
+        if (!data || !data.data || !Array.isArray(data.data)) {
+            document.getElementById('user-result').innerHTML = `<p>No valid data found for user ${userId}</p>`;
+        } else {
+            var userData = data.data; // Accessing the 'data' array
+            var userHtml = `<h3>User Data for ID ${data.user_id}</h3><ul>`;
+            userData.forEach(function(entry) { // Loop through each entry in the 'data' array
+                userHtml += `<li>Prediction: ${entry.fraud_prediction}</li>`; // Accessing 'fraud_prediction' property
+                userHtml += `<li>Fraud Probability: ${entry.fraud_probability}</li>`; // Accessing 'fraud_probability' property
+                // Add more fields as needed
+            });
+            userHtml += `</ul>`;
+            document.getElementById('user-result').innerHTML = userHtml;
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+document.getElementById('ban-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var userIdToBan = document.getElementById('user_id_to_ban').value;
+    banAccount(userIdToBan);
+});
+
+function banAccount(userId) {
+    fetch('/ban/' + encodeURIComponent(userId), {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if ('success' in data) {
+            alert('Account banned successfully!');
+        } else if ('error' in data) {
+            alert(data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+    </script>
+   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script> 
+    
+</body>
+</html>
